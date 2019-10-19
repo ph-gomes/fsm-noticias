@@ -32,3 +32,15 @@ mongoose
     app.listen(port, _ => console.log(`Listening to port ${port}`));
   })
   .catch(e => console.log(e));
+
+/**
+ * Teste do model
+ */
+
+const User = require("./models/user");
+const user = new User({
+  username: "TestUser",
+  password: "abc123"
+});
+
+user.save(() => console.log("Save"));
