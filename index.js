@@ -5,8 +5,11 @@ const mongoose = require("mongoose");
 const path = require("path");
 
 const User = require("./models/user");
+
 const news = require("./routes/news");
 const admin = require("./routes/admin");
+const auth = require("./routes/auth");
+const pages = require("./routes/pages");
 
 const app = express();
 
@@ -31,25 +34,21 @@ app.use("/admin", (req, res, next) => {
   else res.redirect("/login");
 });
 
-app.use("/noticias", news);
-app.use("/admin", admin);
-
-app.get("/login", (req, res) => res.render("login"));
-app.post("/login", async (req, res) => {
-  const user = await User.findOne({ username: req.body.username });
-  const isValid = await user.checkPassword(req.body.password);
-
-  if (isValid) {
-    req.session.user = user;
-    res.redirect("/admin/noticias");
-  } else res.redirect("/login");
+app.use((req, res, next) => {
+  if ("user" in req.session) {
+    res.locals.user = req.session.user;
+  }
+  next();
 });
+
+app.use("/admin", admin);
+app.use("/noticias", news);
+app.use("/login", auth);
+app.use("/", pages);
 
 /** Valores de configurações do express. */
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
-
-app.get("/", (req, res) => res.render("index.ejs"));
 
 /** Cria usuário inicial */
 const createInitialUser = async () => {
