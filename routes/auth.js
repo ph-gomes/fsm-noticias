@@ -2,14 +2,27 @@ const Router = require("express").Router();
 
 const User = require("../models/user");
 
-Router.get("/", (req, res) => res.render("login"));
-Router.post("/", async (req, res) => {
-  const user = await User.findOne({ username: req.body.username });
-  const isValid = await user.checkPassword(req.body.password);
+Router.use((req, res, next) => {
+  if ("user" in req.session) {
+    res.locals.user = req.session.user;
+  }
+  next();
+});
 
-  if (isValid) {
-    req.session.user = user;
-    res.redirect("/admin/noticias");
+Router.get("/login", (req, res) => res.render("login"));
+Router.get("/logout", async (req, res) => {
+  await req.session.destroy();
+  res.redirect("/");
+});
+
+Router.post("/login", async (req, res) => {
+  const user = await User.findOne({ username: req.body.username });
+  if (user) {
+    const isValid = await user.checkPassword(req.body.password);
+    if (isValid) {
+      req.session.user = user;
+      res.redirect("/admin/noticias");
+    }
   } else res.redirect("/login");
 });
 

@@ -1,9 +1,11 @@
-const express = require("express");
+const Router = require("express").Router();
 
-const Router = express.Router();
+const News = require("../models/news");
 
-Router.get("/", (req, res) => {
-  res.send("Noticias Publicas");
+Router.get("/", async (req, res) => {
+  const conditions = { category: "public" };
+  const news = await News.find(conditions);
+  res.render("news/index", { news });
 });
 
 module.exports = Router;
