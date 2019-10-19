@@ -29,22 +29,10 @@ app.use(
   })
 );
 
-app.use("/admin", (req, res, next) => {
-  if ("user" in req.session) return next();
-  else res.redirect("/login");
-});
-
-app.use((req, res, next) => {
-  if ("user" in req.session) {
-    res.locals.user = req.session.user;
-  }
-  next();
-});
-
+app.use("/", auth);
+app.use("/", pages);
 app.use("/admin", admin);
 app.use("/noticias", news);
-app.use("/login", auth);
-app.use("/", pages);
 
 /** Valores de configurações do express. */
 app.set("views", path.join(__dirname, "views"));
