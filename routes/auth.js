@@ -41,7 +41,6 @@ Router.get("/logout", async (req, res) => {
   res.redirect("/");
 });
 Router.get("/change-role/:role", async (req, res) => {
-  console.log(req.user);
   if (req.isAuthenticated()) {
     if (req.user.roles.indexOf(req.params.role) >= 0)
       req.session.role = req.params.role;
