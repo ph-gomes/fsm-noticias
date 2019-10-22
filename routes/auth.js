@@ -1,10 +1,35 @@
 const Router = require("express").Router();
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
 
 const User = require("../models/user");
 
+Router.use(passport.initialize());
+Router.use(passport.session());
+
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
+
+// definindo a estrategia para login local
+passport.use(
+  new LocalStrategy(async (username, password, done) => {
+    const user = await User.findOne({ username });
+    if (user) {
+      if (await user.checkPassword(password)) done(null, user);
+      else done(null, false);
+    } else done(null, false);
+  })
+);
+
 Router.use((req, res, next) => {
-  if ("user" in req.session) {
-    res.locals.user = req.session.user;
+  if (req.isAuthenticated()) {
+    res.locals.user = req.user;
+    if (!req.session.role) req.session.role = req.user.roles[0];
     res.locals.role = req.session.role;
   }
   next();
@@ -16,23 +41,21 @@ Router.get("/logout", async (req, res) => {
   res.redirect("/");
 });
 Router.get("/change-role/:role", async (req, res) => {
-  if ("user" in req.session) {
-    if (req.session.user.roles.indexOf(req.params.role) >= 0)
+  console.log(req.user);
+  if (req.isAuthenticated()) {
+    if (req.user.roles.indexOf(req.params.role) >= 0)
       req.session.role = req.params.role;
   }
   res.redirect("/");
 });
 
-Router.post("/login", async (req, res) => {
-  const user = await User.findOne({ username: req.body.username });
-  if (user) {
-    const isValid = await user.checkPassword(req.body.password);
-    if (isValid) {
-      req.session.user = user;
-      req.session.role = user.roles[0];
-      res.redirect("/restrict/noticias");
-    }
-  } else res.redirect("/login");
-});
+Router.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+    failureFlash: false
+  })
+);
 
 module.exports = Router;
