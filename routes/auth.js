@@ -21,7 +21,7 @@ Router.post("/login", async (req, res) => {
     const isValid = await user.checkPassword(req.body.password);
     if (isValid) {
       req.session.user = user;
-      res.redirect("/admin/noticias");
+      res.redirect("/restrict/noticias");
     }
   } else res.redirect("/login");
 });

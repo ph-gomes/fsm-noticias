@@ -7,13 +7,11 @@ Router.use((req, res, next) => {
   else res.redirect("/login");
 });
 
-Router.get("/", (req, res) =>
-  res.send("Área Administrativa - Acesso Restrito")
-);
+Router.get("/", (req, res) => res.send("Área Restrita - Acesso Restrito"));
 Router.get("/noticias", async (req, res) => {
   const conditions = { category: "private" };
   const news = await News.find(conditions);
-  res.render("news/admin", { news });
+  res.render("news/restrict", { news });
 });
 
 module.exports = Router;
