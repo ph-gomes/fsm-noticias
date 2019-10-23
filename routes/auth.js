@@ -2,6 +2,7 @@ const Router = require("express").Router();
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const FacebookStrategy = require("passport-facebook");
+const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy;
 
 const User = require("../models/user");
 
@@ -31,6 +32,30 @@ passport.use(
         const user = new User({
           name: profile.displayName,
           facebookId: profile.id,
+          roles: ["restrito"]
+        });
+        await user.save();
+        done(null, user);
+      } else done(null, userDB);
+    }
+  )
+);
+
+/** Definindo a estrategia para login com o Google */
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID:
+        "448200838487-qrdug3e3s5osotca8h2qrdg6cropspmp.apps.googleusercontent.com",
+      clientSecret: "6Xpyw25DU3ee8HijrZ1lSjhL",
+      callbackURL: "http://localhost:3000/google/callback"
+    },
+    async (accessToken, refreshToken, err, profile, done) => {
+      const userDB = await User.findOne({ googleId: profile.id });
+      if (!userDB) {
+        const user = new User({
+          name: profile.displayName,
+          googleId: profile.id,
           roles: ["restrito"]
         });
         await user.save();
@@ -77,6 +102,20 @@ Router.get(
   "/facebook/callback",
   passport.authenticate("facebook", { failureRedirect: "/" }),
   (req, res) => res.redirect("/")
+);
+
+Router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["https://www.googleapis.com/auth/userinfo.profile"]
+  })
+);
+Router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/",
+    successRedirect: "/"
+  })
 );
 
 Router.post(
